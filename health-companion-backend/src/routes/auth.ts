@@ -92,10 +92,12 @@ const isProfileVerified = (name: string, profile: UserProfile): boolean => {
   return requiredFields.every((field) => Boolean(String(field ?? '').trim()));
 };
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const cookieOptions = {
   httpOnly: true,
-  sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production',
+  sameSite: isProduction ? 'none' as const : 'lax' as const,
+  secure: isProduction,
   maxAge: 1000 * 60 * 60 * 24 * 30,
   path: '/',
 };
