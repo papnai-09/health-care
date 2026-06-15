@@ -40,8 +40,6 @@ const emptyProfileForm: ProfileForm = {
   heightCm: "",
   weightKg: "",
   address: "",
-  emergencyContactName: "",
-  emergencyContactPhone: "",
   allergies: "",
   chronicConditions: "",
   profilePhotoUrl: "",
@@ -65,8 +63,6 @@ const buildProfileForm = (user: AuthUser | null): ProfileForm => ({
   heightCm: user?.profile?.heightCm ?? "",
   weightKg: user?.profile?.weightKg ?? "",
   address: user?.profile?.address ?? "",
-  emergencyContactName: user?.profile?.emergencyContactName ?? "",
-  emergencyContactPhone: user?.profile?.emergencyContactPhone ?? "",
   allergies: user?.profile?.allergies ?? "",
   chronicConditions: user?.profile?.chronicConditions ?? "",
   profilePhotoUrl: user?.profile?.profilePhotoUrl ?? "",
@@ -134,7 +130,7 @@ function ProfileContent() {
   };
 
   return (
-    <DashboardLayout title="Account Profile" subtitle="Maintain accurate contact, clinical, and emergency information for care coordination.">
+    <DashboardLayout title="Account Profile" subtitle="Maintain accurate contact and clinical information for care coordination.">
       <form onSubmit={handleSubmit} className="grid items-start gap-5 xl:grid-cols-[380px_minmax(0,1fr)]">
         <aside className="space-y-5 xl:sticky xl:top-24">
           <section className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
