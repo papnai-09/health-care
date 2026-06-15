@@ -4,7 +4,16 @@ const hasSmtpConfig = () => Boolean(process.env.SMTP_HOST && process.env.SMTP_US
 const hasResendConfig = () => Boolean(process.env.RESEND_API_KEY);
 const hasBrevoConfig = () => Boolean(process.env.BREVO_API_KEY);
 
-export const canSendEmail = () => hasBrevoConfig() || hasResendConfig() || hasSmtpConfig();
+// Render and many cloud hosts block or time out SMTP (ports 587/465).
+// Use Brevo/Resend HTTP APIs in production; keep SMTP for local dev only.
+const useSmtpDelivery = () => {
+  if (!hasSmtpConfig()) return false;
+  if (process.env.EMAIL_USE_SMTP === 'true') return true;
+  if (process.env.EMAIL_USE_SMTP === 'false') return false;
+  return process.env.NODE_ENV !== 'production';
+};
+
+export const canSendEmail = () => hasBrevoConfig() || hasResendConfig() || useSmtpDelivery();
 
 const getSenderEmail = () =>
   process.env.EMAIL_FROM ??
@@ -86,10 +95,17 @@ export const logEmailConfig = () => {
     return;
   }
 
-  if (hasSmtpConfig()) {
+  if (useSmtpDelivery()) {
     const port = smtpPort();
     const secure = smtpSecure();
     console.log(`Email ready via SMTP: ${process.env.SMTP_HOST}:${port} secure=${secure} user=${process.env.SMTP_USER}`);
+    return;
+  }
+
+  if (hasSmtpConfig() && process.env.NODE_ENV === 'production') {
+    console.warn(
+      'SMTP is configured but disabled on production. Create a Brevo API key (xkeysib-...) and set BREVO_API_KEY on Render.',
+    );
     return;
   }
 
@@ -209,13 +225,15 @@ const sendWithRetry = async (mailOptions: nodemailer.SendMailOptions, attempts =
 };
 
 export const sendOtpEmail = async ({ to, name, otp }: { to: string; name: string; otp: string }): Promise<void> => {
-  if (!canSendEmail()) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEV] Verification OTP for ${to}: ${otp}`);
-      return;
-    }
+  if (!canSendEmail() && process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'Email is not configured for production. Add BREVO_API_KEY (xkeysib-...) on Render. SMTP keys (xsmtpsib-...) do not work on cloud hosts.',
+    );
+  }
 
-    throw new Error('Email service is not configured. Add BREVO_API_KEY, RESEND_API_KEY, or SMTP settings.');
+  if (!canSendEmail()) {
+    console.log(`[DEV] Verification OTP for ${to}: ${otp}`);
+    return;
   }
 
   const { subject, text, html } = buildOtpContent({ name, otp });
@@ -230,18 +248,36 @@ export const sendOtpEmail = async ({ to, name, otp }: { to: string; name: string
     return;
   }
 
-  await sendWithRetry({
-    from: process.env.SMTP_FROM ?? process.env.SMTP_USER,
-    to,
-    subject,
-    text,
-    html,
-  });
+  if (useSmtpDelivery()) {
+    await sendWithRetry({
+      from: process.env.SMTP_FROM ?? process.env.SMTP_USER,
+      to,
+      subject,
+      text,
+      html,
+    });
+    return;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[DEV] Verification OTP for ${to}: ${otp}`);
+    return;
+  }
+
+  throw new Error(
+    'Email is not configured for production. Add BREVO_API_KEY (xkeysib-...) on Render. SMTP keys (xsmtpsib-...) do not work on cloud hosts.',
+  );
 };
 
 export const queueOtpEmail = ({ to, name, otp }: { to: string; name: string; otp: string }) => {
   void sendOtpEmail({ to, name, otp }).catch((error) => {
-    const provider = hasBrevoConfig() ? 'Brevo' : hasResendConfig() ? 'Resend' : `SMTP ${process.env.SMTP_HOST}:${smtpPort()}`;
+    const provider = hasBrevoConfig()
+      ? 'Brevo API'
+      : hasResendConfig()
+        ? 'Resend'
+        : useSmtpDelivery()
+          ? `SMTP ${process.env.SMTP_HOST}:${smtpPort()}`
+          : 'email provider';
     console.error(`Background OTP email failed for ${to} via ${provider}:`, error);
   });
 };
