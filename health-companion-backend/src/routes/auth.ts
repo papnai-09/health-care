@@ -78,9 +78,6 @@ const normalizeProfile = (currentProfile: UserProfile = {}, incomingProfile: Par
     bloodGroup: getField('bloodGroup', 8),
     heightCm: getField('heightCm', 8),
     weightKg: getField('weightKg', 8),
-    address: getField('address', 240),
-    emergencyContactName: getField('emergencyContactName', 120),
-    emergencyContactPhone: getField('emergencyContactPhone', 32),
     allergies: getField('allergies', 320),
     chronicConditions: getField('chronicConditions', 320),
     profilePhotoUrl: getField('profilePhotoUrl', 600),
@@ -88,7 +85,7 @@ const normalizeProfile = (currentProfile: UserProfile = {}, incomingProfile: Par
 };
 
 const isProfileVerified = (name: string, profile: UserProfile): boolean => {
-  const requiredFields = [name, profile.phone, profile.dateOfBirth, profile.gender, profile.bloodGroup, profile.emergencyContactPhone];
+  const requiredFields = [name, profile.phone, profile.dateOfBirth, profile.gender, profile.bloodGroup];
   return requiredFields.every((field) => Boolean(String(field ?? '').trim()));
 };
 

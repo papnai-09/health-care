@@ -25,9 +25,6 @@ export interface UserProfile {
   bloodGroup?: string;
   heightCm?: string;
   weightKg?: string;
-  address?: string;
-  emergencyContactName?: string;
-  emergencyContactPhone?: string;
   allergies?: string;
   chronicConditions?: string;
   profilePhotoUrl?: string;

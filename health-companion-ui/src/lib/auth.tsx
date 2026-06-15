@@ -31,9 +31,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const loadSession = async () => {
       try {
-        const response = await api.getCurrentUser();
-        setUser(normalizeUser(response.user));
-      } catch {
+        // Check if token exists in localStorage before making API call
+        if (api.getStoredToken()) {
+          const response = await api.getCurrentUser();
+          setUser(normalizeUser(response.user));
+        }
+      } catch (error) {
+        console.error('Session load error:', error);
+        // Clear invalid token
+        api.clearToken();
         setUser(null);
       } finally {
         setInitializing(false);
@@ -124,6 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = () => {
+    api.clearToken();
     void api.logout().catch(() => undefined);
     setUser(null);
   };
