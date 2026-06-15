@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   HeartPulse,
   Mail,
-  MapPin,
   Phone,
   Ruler,
   Save,
@@ -39,7 +38,6 @@ const emptyProfileForm: ProfileForm = {
   bloodGroup: "",
   heightCm: "",
   weightKg: "",
-  address: "",
   allergies: "",
   chronicConditions: "",
   profilePhotoUrl: "",
@@ -62,7 +60,6 @@ const buildProfileForm = (user: AuthUser | null): ProfileForm => ({
   bloodGroup: user?.profile?.bloodGroup ?? "",
   heightCm: user?.profile?.heightCm ?? "",
   weightKg: user?.profile?.weightKg ?? "",
-  address: user?.profile?.address ?? "",
   allergies: user?.profile?.allergies ?? "",
   chronicConditions: user?.profile?.chronicConditions ?? "",
   profilePhotoUrl: user?.profile?.profilePhotoUrl ?? "",
@@ -218,14 +215,14 @@ function ProfileContent() {
             <div className="mb-5 flex items-center gap-3">
               <FieldIcon><UserRound className="h-5 w-5" /></FieldIcon>
               <div>
-                <h2 className="text-lg font-bold text-foreground">Account information</h2>
-                <p className="text-sm text-muted-foreground">Primary contact details used for communication and account records.</p>
+                <h2 className="text-lg font-bold text-foreground">Account Information</h2>
+                <p className="text-sm text-muted-foreground">Primary contact details for communication and account records.</p>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="profile-name">Full name *</Label>
+                <Label htmlFor="profile-name">Full Name *</Label>
                 <Input id="profile-name" value={form.name} onChange={handleChange("name")} className={fieldClassName} required />
               </div>
               <div className="space-y-2">
@@ -246,7 +243,7 @@ function ProfileContent() {
                 <Label htmlFor="profile-photo">Photo URL</Label>
                 <div className="relative">
                   <Camera className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="profile-photo" type="url" value={form.profilePhotoUrl} onChange={handleChange("profilePhotoUrl")} className={`${fieldClassName} pl-9`} placeholder="https://..." />
+                  <Input id="profile-photo" type="url" value={form.profilePhotoUrl} onChange={handleChange("profilePhotoUrl")} className={`${fieldClassName} pl-9`} placeholder="https://example.com/photo.jpg" />
                 </div>
               </div>
             </div>
@@ -256,14 +253,14 @@ function ProfileContent() {
             <div className="mb-5 flex items-center gap-3">
               <FieldIcon><HeartPulse className="h-5 w-5" /></FieldIcon>
               <div>
-                <h2 className="text-lg font-bold text-foreground">Clinical profile</h2>
+                <h2 className="text-lg font-bold text-foreground">Clinical Profile</h2>
                 <p className="text-sm text-muted-foreground">Core demographic and biometric information for consultations.</p>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <div className="space-y-2">
-                <Label htmlFor="profile-dob">Date of birth *</Label>
+                <Label htmlFor="profile-dob">Date of Birth *</Label>
                 <Input id="profile-dob" type="date" value={form.dateOfBirth} onChange={handleChange("dateOfBirth")} className={fieldClassName} required />
               </div>
               <div className="space-y-2">
@@ -277,7 +274,7 @@ function ProfileContent() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="profile-blood">Blood group *</Label>
+                <Label htmlFor="profile-blood">Blood Group *</Label>
                 <select id="profile-blood" value={form.bloodGroup} onChange={handleChange("bloodGroup")} className={selectClassName} required>
                   <option value="">Select blood group</option>
                   <option value="A+">A+</option>
@@ -292,17 +289,17 @@ function ProfileContent() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="profile-height">Height</Label>
+                  <Label htmlFor="profile-height">Height (cm)</Label>
                   <div className="relative">
                     <Ruler className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="profile-height" value={form.heightCm} onChange={handleChange("heightCm")} className={`${fieldClassName} pl-9`} inputMode="numeric" placeholder="cm" />
+                    <Input id="profile-height" value={form.heightCm} onChange={handleChange("heightCm")} className={`${fieldClassName} pl-9`} inputMode="numeric" placeholder="170" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="profile-weight">Weight</Label>
+                  <Label htmlFor="profile-weight">Weight (kg)</Label>
                   <div className="relative">
                     <Weight className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="profile-weight" value={form.weightKg} onChange={handleChange("weightKg")} className={`${fieldClassName} pl-9`} inputMode="numeric" placeholder="kg" />
+                    <Input id="profile-weight" value={form.weightKg} onChange={handleChange("weightKg")} className={`${fieldClassName} pl-9`} inputMode="numeric" placeholder="70" />
                   </div>
                 </div>
               </div>
@@ -313,30 +310,30 @@ function ProfileContent() {
             <div className="mb-5 flex items-center gap-3">
               <FieldIcon><Activity className="h-5 w-5" /></FieldIcon>
               <div>
-                <h2 className="text-lg font-bold text-foreground">Medical considerations</h2>
-                <p className="text-sm text-muted-foreground">Share allergies and ongoing conditions that may affect care planning.</p>
+                <h2 className="text-lg font-bold text-foreground">Medical Considerations</h2>
+                <p className="text-sm text-muted-foreground">Document allergies and chronic conditions that may impact your care.</p>
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="profile-allergies">Allergies or foods to avoid</Label>
-                <Textarea id="profile-allergies" value={form.allergies} onChange={handleChange("allergies")} className="min-h-28 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary" placeholder="Example: peanuts, lactose, shellfish" />
+                <Label htmlFor="profile-allergies">Allergies or Foods to Avoid</Label>
+                <Textarea id="profile-allergies" value={form.allergies} onChange={handleChange("allergies")} className="min-h-24 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary" placeholder="e.g., peanuts, lactose, shellfish" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="profile-conditions">Chronic conditions</Label>
-                <Textarea id="profile-conditions" value={form.chronicConditions} onChange={handleChange("chronicConditions")} className="min-h-28 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary" placeholder="Example: diabetes, asthma, hypertension" />
+                <Label htmlFor="profile-conditions">Chronic Conditions</Label>
+                <Textarea id="profile-conditions" value={form.chronicConditions} onChange={handleChange("chronicConditions")} className="min-h-24 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary" placeholder="e.g., diabetes, asthma, hypertension" />
               </div>
             </div>
           </section>
 
-          <div className="sticky bottom-4 z-20 rounded-lg border border-border bg-background/92 p-3 shadow-elevated backdrop-blur-xl">
+          <div className="sticky bottom-4 z-20 rounded-lg border border-border bg-background/92 p-4 shadow-elevated backdrop-blur-xl">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-muted-foreground">
-                {completionPercent === 100 ? "All mandatory fields are complete." : `${missingFields.length} mandatory field${missingFields.length === 1 ? "" : "s"} remaining.`}
+                {completionPercent === 100 ? "✓ All mandatory fields completed" : `${missingFields.length} field${missingFields.length === 1 ? "" : "s"} pending`}
               </div>
               <Button type="submit" variant="hero" className="w-full sm:w-auto" disabled={saving || loading || !form.name.trim()}>
                 <Save className="h-4 w-4" />
-                {saving ? "Saving..." : "Save profile"}
+                {saving ? "Saving..." : "Save Profile"}
               </Button>
             </div>
           </div>
