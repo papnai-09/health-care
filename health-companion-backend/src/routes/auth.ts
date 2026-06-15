@@ -192,7 +192,7 @@ router.post('/register', verificationRateLimit, async (req, res) => {
     if (!canSendEmail() && process.env.NODE_ENV === 'production') {
       return res.status(500).json({
         success: false,
-        error: 'Email service is not configured. Add SMTP settings in backend .env.',
+        error: 'Email service is not configured. Add BREVO_API_KEY, RESEND_API_KEY, or SMTP settings in Render.',
       } as ApiResponse<null>);
     }
 
@@ -369,7 +369,7 @@ router.post('/resend-otp', verificationRateLimit, async (req, res) => {
     if (!canSendEmail() && process.env.NODE_ENV === 'production') {
       return res.status(500).json({
         success: false,
-        error: 'Email service is not configured. Add SMTP settings in backend .env.',
+        error: 'Email service is not configured. Add BREVO_API_KEY, RESEND_API_KEY, or SMTP settings in Render.',
       } as ApiResponse<null>);
     }
 
