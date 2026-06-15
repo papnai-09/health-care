@@ -77,9 +77,9 @@ const getInitials = (name?: string, email?: string) => {
   return initials || "U";
 };
 
-const fieldClassName = "h-11 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary";
+const fieldClassName = "h-11 w-full rounded-lg border border-input bg-background/80 text-sm focus-visible:ring-primary focus-visible:ring-offset-2";
 const selectClassName =
-  "flex h-11 w-full rounded-lg border border-input bg-background/80 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
+  "flex h-11 w-full rounded-lg border border-input bg-background/80 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
 
 const FieldIcon = ({ children }: { children: ReactNode }) => (
   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">{children}</div>
@@ -128,8 +128,8 @@ function ProfileContent() {
 
   return (
     <DashboardLayout title="Account Profile" subtitle="Maintain accurate contact and clinical information for care coordination.">
-      <form onSubmit={handleSubmit} className="grid items-start gap-5 xl:grid-cols-[380px_minmax(0,1fr)]">
-        <aside className="space-y-5 xl:sticky xl:top-24">
+      <form onSubmit={handleSubmit} className="grid items-start gap-6 lg:grid-cols-[320px_1fr] xl:grid-cols-[360px_1fr]">
+        <aside className="space-y-6 lg:sticky lg:top-24">
           <section className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
             <div className="border-b border-border bg-gradient-card p-5">
               <div className="flex items-start gap-4">
@@ -142,12 +142,12 @@ function ProfileContent() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold uppercase tracking-widest text-primary">Account summary</p>
-                  <h2 className="mt-1 truncate text-xl font-extrabold text-foreground" title={form.name || "Patient profile"}>
+                  <h2 className="mt-1 break-words text-xl font-extrabold text-foreground leading-tight">
                     {form.name || "Patient profile"}
                   </h2>
-                  <p className="mt-1 flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
-                    <Mail className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">{user.email}</span>
+                  <p className="mt-1.5 flex min-w-0 items-start gap-1.5 text-sm text-muted-foreground">
+                    <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span className="break-all">{user.email}</span>
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <span className="inline-flex rounded-full bg-primary-soft px-3 py-1 text-xs font-bold capitalize text-primary">
@@ -258,7 +258,7 @@ function ProfileContent() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <div className="space-y-2">
                 <Label htmlFor="profile-dob">Date of Birth *</Label>
                 <Input id="profile-dob" type="date" value={form.dateOfBirth} onChange={handleChange("dateOfBirth")} className={fieldClassName} required />
@@ -287,20 +287,18 @@ function ProfileContent() {
                   <option value="O-">O-</option>
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="profile-height">Height (cm)</Label>
-                  <div className="relative">
-                    <Ruler className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="profile-height" value={form.heightCm} onChange={handleChange("heightCm")} className={`${fieldClassName} pl-9`} inputMode="numeric" placeholder="170" />
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="profile-height">Height (cm)</Label>
+                <div className="relative">
+                  <Ruler className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="profile-height" value={form.heightCm} onChange={handleChange("heightCm")} className={`${fieldClassName} pl-9`} inputMode="numeric" placeholder="170" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="profile-weight">Weight (kg)</Label>
-                  <div className="relative">
-                    <Weight className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="profile-weight" value={form.weightKg} onChange={handleChange("weightKg")} className={`${fieldClassName} pl-9`} inputMode="numeric" placeholder="70" />
-                  </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profile-weight">Weight (kg)</Label>
+                <div className="relative">
+                  <Weight className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="profile-weight" value={form.weightKg} onChange={handleChange("weightKg")} className={`${fieldClassName} pl-9`} inputMode="numeric" placeholder="70" />
                 </div>
               </div>
             </div>
