@@ -21,6 +21,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const apiRateLimitMax = Number(process.env.API_RATE_LIMIT_MAX ?? (isProduction ? 300 : 1000));
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  'https://medicare-ai-alpha.vercel.app',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'http://localhost:5173',
