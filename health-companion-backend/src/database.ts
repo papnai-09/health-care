@@ -212,7 +212,7 @@ export const usersDb = {
       verified: false,
       emailVerified: false,
       profile: {},
-      passwordHash: hashPassword(user.password),
+      passwordHash: user.password.startsWith('already-hashed:') ? user.password.slice('already-hashed:'.length) : hashPassword(user.password),
       token: randomUUID(),
     };
 
