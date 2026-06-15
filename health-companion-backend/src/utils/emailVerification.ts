@@ -133,8 +133,12 @@ export const validateEmailForSignup = async (rawEmail: unknown): Promise<EmailVa
     return { ok: false, status: 400, error: 'Email does not exist' };
   }
 
-  if (requireMailboxVerification() && mailboxExists !== true) {
-    return { ok: false, status: 400, error: 'Email does not exist or cannot be verified. Please use a real email address.' };
+  // Many mail providers (including Gmail) block or tarp it RCPT probes.
+  // If SMTP checks are inconclusive (null), we still allow signup as long as
+  // the email format + MX records are valid. Only a definitive "does not exist"
+  // (false) blocks signup.
+  if (requireMailboxVerification() && mailboxExists === null) {
+    console.warn(`SMTP mailbox verification inconclusive for ${email}; allowing signup due to valid MX records.`);
   }
 
   return { ok: true, email, domain };
