@@ -153,7 +153,6 @@ const TOKEN_KEY = "medicare_token";
 const getHeaders = (extra?: Record<string, string>) => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...extra,
   };
 
   // Add token from localStorage to Authorization header
@@ -162,6 +161,11 @@ const getHeaders = (extra?: Record<string, string>) => {
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
+  }
+
+  // Merge with extra headers (extra headers can override)
+  if (extra) {
+    Object.assign(headers, extra);
   }
 
   return headers;
@@ -188,7 +192,7 @@ const setToken = (token: string) => {
   }
 };
 
-const clearToken = () => {
+export const clearToken = () => {
   if (typeof window !== "undefined") {
     localStorage.removeItem(TOKEN_KEY);
   }
