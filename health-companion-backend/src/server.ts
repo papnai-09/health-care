@@ -16,6 +16,10 @@ import { logEmailConfig } from './email';
 dotenv.config();
 
 const app = express();
+
+// Trust proxy for accurate rate limiting behind reverse proxy (e.g., Render)
+app.set('trust proxy', 1);
+
 const PORT = process.env.PORT || 3001;
 const isProduction = process.env.NODE_ENV === 'production';
 const apiRateLimitMax = Number(process.env.API_RATE_LIMIT_MAX ?? (isProduction ? 300 : 1000));

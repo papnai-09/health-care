@@ -150,7 +150,7 @@ export const doctorsDb = {
   getById: async (id: string): Promise<Doctor | null> => DoctorModel.findOne({ id }).lean<Doctor | null>(),
   create: async (doctor: Doctor): Promise<Doctor> => toPlain<Doctor>(await DoctorModel.create(doctor)),
   update: async (id: string, updates: Partial<Doctor>): Promise<Doctor | null> =>
-    DoctorModel.findOneAndUpdate({ id }, updates, { new: true }).lean<Doctor | null>(),
+    DoctorModel.findOneAndUpdate({ id }, updates, { returnDocument: 'after' }).lean<Doctor | null>(),
   delete: async (id: string): Promise<boolean> => {
     const result = await DoctorModel.deleteOne({ id });
     return result.deletedCount > 0;
@@ -163,7 +163,7 @@ export const appointmentsDb = {
   getById: async (id: string): Promise<Appointment | null> => AppointmentModel.findOne({ id }).lean<Appointment | null>(),
   create: async (appointment: Appointment): Promise<Appointment> => toPlain<Appointment>(await AppointmentModel.create(appointment)),
   update: async (id: string, updates: Partial<Appointment>): Promise<Appointment | null> =>
-    AppointmentModel.findOneAndUpdate({ id }, updates, { new: true }).lean<Appointment | null>(),
+    AppointmentModel.findOneAndUpdate({ id }, updates, { returnDocument: 'after' }).lean<Appointment | null>(),
   delete: async (id: string): Promise<boolean> => {
     const result = await AppointmentModel.deleteOne({ id });
     return result.deletedCount > 0;
@@ -176,7 +176,7 @@ export const recordsDb = {
   getById: async (id: string): Promise<HealthRecord | null> => RecordModel.findOne({ id }).lean<HealthRecord | null>(),
   create: async (record: HealthRecord): Promise<HealthRecord> => toPlain<HealthRecord>(await RecordModel.create(record)),
   update: async (id: string, updates: Partial<HealthRecord>): Promise<HealthRecord | null> =>
-    RecordModel.findOneAndUpdate({ id }, updates, { new: true }).lean<HealthRecord | null>(),
+    RecordModel.findOneAndUpdate({ id }, updates, { returnDocument: 'after' }).lean<HealthRecord | null>(),
   delete: async (id: string): Promise<boolean> => {
     const result = await RecordModel.deleteOne({ id });
     return result.deletedCount > 0;
@@ -220,11 +220,11 @@ export const usersDb = {
   },
   updateToken: async (userId: string): Promise<string | null> => {
     const token = randomUUID();
-    const user = await UserModel.findOneAndUpdate({ id: userId }, { token }, { new: true }).lean<User | null>();
+    const user = await UserModel.findOneAndUpdate({ id: userId }, { token }, { returnDocument: 'after' }).lean<User | null>();
     return user?.token ?? null;
   },
   update: async (userId: string, updates: Partial<User>): Promise<User | null> =>
-    UserModel.findOneAndUpdate({ id: userId }, updates, { new: true }).lean<User | null>(),
+    UserModel.findOneAndUpdate({ id: userId }, updates, { returnDocument: 'after' }).lean<User | null>(),
   createOAuthUser: async (user: { name: string; email: string; role?: 'patient' | 'doctor' | 'admin' }): Promise<User> => {
     const newUser: User = {
       id: randomUUID(),
@@ -271,14 +271,14 @@ export const pendingRegistrationsDb = {
     return PendingRegistrationModel.findOneAndUpdate(
       { email: pending.email },
       pending,
-      { upsert: true, new: true, setDefaultsOnInsert: true },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
     ).lean<PendingRegistration>();
   },
   refreshOtp: async (email: string, otp: string, expiresAt: Date): Promise<PendingRegistration | null> =>
     PendingRegistrationModel.findOneAndUpdate(
       { email: email.toLowerCase() },
       { otpHash: hashPassword(otp), otpExpiresAt: expiresAt.toISOString() },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean<PendingRegistration | null>(),
   verifyOtp: async (email: string, otp: string): Promise<PendingRegistration | null> => {
     const pending = await PendingRegistrationModel.findOne({ email: email.toLowerCase() }).lean<PendingRegistration | null>();
