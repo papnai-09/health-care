@@ -2,7 +2,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { OAuth2Client } from 'google-auth-library';
 import { doctorsDb, pendingRegistrationsDb, usersDb, hashPassword } from '../database';
-import { sendOtpEmail } from '../email';
+import { canSendEmail, queueOtpEmail } from '../email';
 import { ApiResponse, User, UserProfile } from '../types';
 import { AUTH_COOKIE_NAME, authenticateToken } from '../middleware/auth';
 import { isValidEmailFormat, validateEmailForSignup } from '../utils/emailVerification';
@@ -112,12 +112,6 @@ const clearSessionCookie = (res: express.Response) => {
 
 const createOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
-const sendVerificationOtp = async ({ email, name }: { email: string; name: string }) => {
-  const otp = createOtp();
-  await sendOtpEmail({ to: email, name, otp });
-  return otp;
-};
-
 // GET /api/auth/me
 router.get('/me', authenticateToken, (req, res) => {
   const user = req.user;
@@ -195,6 +189,13 @@ router.post('/register', verificationRateLimit, async (req, res) => {
       }
     }
 
+    if (!canSendEmail() && process.env.NODE_ENV === 'production') {
+      return res.status(500).json({
+        success: false,
+        error: 'Email service is not configured. Add SMTP settings in backend .env.',
+      } as ApiResponse<null>);
+    }
+
     const validation = await validateEmailForSignup(email);
     if (!validation.ok) {
       return res.status(validation.status).json({ success: false, error: validation.error } as ApiResponse<null>);
@@ -206,20 +207,7 @@ router.post('/register', verificationRateLimit, async (req, res) => {
     }
 
     const normalizedEmail = validation.email;
-    let otp: string;
-    try {
-      otp = await sendVerificationOtp({ email: normalizedEmail, name: name.trim() });
-    } catch (error) {
-      console.error('OTP email send error:', error);
-      if (error instanceof Error && error.message.includes('Email service is not configured')) {
-        return res.status(500).json({ success: false, error: error.message } as ApiResponse<null>);
-      }
-
-      return res.status(503).json({
-        success: false,
-        error: 'Unable to send verification email right now. Please try again in a few minutes.',
-      } as ApiResponse<null>);
-    }
+    const otp = createOtp();
 
     await pendingRegistrationsDb.createOrUpdate({
       name: name.trim(),
@@ -231,13 +219,15 @@ router.post('/register', verificationRateLimit, async (req, res) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
+    queueOtpEmail({ to: normalizedEmail, name: name.trim(), otp });
+
     const response: ApiResponse<RegisterResponse> = {
       success: true,
       data: {
         email: normalizedEmail,
         verificationRequired: true,
       },
-      message: 'OTP sent to your email. Verify it to create your account.',
+      message: 'OTP is on its way. Check your inbox and verify to create your account.',
     };
 
     res.status(201).json(response);
@@ -376,6 +366,13 @@ router.post('/resend-otp', verificationRateLimit, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email is required' } as ApiResponse<null>);
     }
 
+    if (!canSendEmail() && process.env.NODE_ENV === 'production') {
+      return res.status(500).json({
+        success: false,
+        error: 'Email service is not configured. Add SMTP settings in backend .env.',
+      } as ApiResponse<null>);
+    }
+
     const validation = await validateEmailForSignup(email);
     if (!validation.ok) {
       return res.status(validation.status).json({ success: false, error: validation.error } as ApiResponse<null>);
@@ -393,23 +390,11 @@ router.post('/resend-otp', verificationRateLimit, async (req, res) => {
       return res.status(404).json({ success: false, error: 'No pending signup found for this email. Please create account again.' } as ApiResponse<null>);
     }
 
-    try {
-      await sendOtpEmail({ to: pending.email, name: pending.name, otp });
-    } catch (error) {
-      console.error('OTP resend email error:', error);
-      if (error instanceof Error && error.message.includes('Email service is not configured')) {
-        return res.status(500).json({ success: false, error: error.message } as ApiResponse<null>);
-      }
-
-      return res.status(503).json({
-        success: false,
-        error: 'Unable to send verification email right now. Please try again in a few minutes.',
-      } as ApiResponse<null>);
-    }
+    queueOtpEmail({ to: pending.email, name: pending.name, otp });
 
     res.json({
       success: true,
-      message: 'OTP sent to your email.',
+      message: 'OTP is on its way. Check your inbox.',
     } as ApiResponse<null>);
   } catch (error) {
     console.error('Resend OTP error:', error);

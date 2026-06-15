@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await api.register(name, email, password, role, doctorProfile);
       setBusy(false);
-      return { success: true, message: "OTP sent to your email. Please verify it to create the account.", verification: response };
+      return { success: true, message: "Account created. OTP is on its way — check your inbox.", verification: response };
     } catch (error) {
       setBusy(false);
       return { success: false, message: error instanceof Error ? error.message : "Registration failed." };
