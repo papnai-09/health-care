@@ -38,9 +38,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (error) {
         console.error('Session load error:', error);
-        // Clear invalid token
-        api.clearToken();
-        setUser(null);
+        // Clear invalid token only if the server confirms it is unauthorized/invalid (401)
+        if (error instanceof api.ApiError && error.status === 401) {
+          api.clearToken();
+          setUser(null);
+        }
       } finally {
         setInitializing(false);
       }

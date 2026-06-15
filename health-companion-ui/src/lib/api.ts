@@ -171,6 +171,15 @@ const getHeaders = (extra?: Record<string, string>) => {
   return headers;
 };
 
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 const request = async <T>(path: string, options: RequestInit = {}) => {
   const response = await fetch(`${BASE_URL}${path}`, {
     ...options,
@@ -180,7 +189,7 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
 
   const json = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(json?.error || json?.message || "Request failed");
+    throw new ApiError(json?.error || json?.message || "Request failed", response.status);
   }
 
   return (json?.data ?? json) as T;
@@ -306,10 +315,10 @@ export const getChatHistory = async () => {
   return request<ChatMessage[]>("/api/chatbot");
 };
 
-export const chatAssistant = async (message: string) => {
+export const chatAssistant = async (message: string, history?: Array<{ role: "user" | "ai"; text: string }>) => {
   return request<{ reply: string }>("/api/chatbot", {
     method: "POST",
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, history }),
   });
 };
 

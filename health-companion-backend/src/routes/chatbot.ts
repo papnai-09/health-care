@@ -13,10 +13,10 @@ router.get('/', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' } as ApiResponse<null>);
     }
 
-    const messages = await chatDb.getByUserId(userId);
+    // Chat history database storage is disabled. Always return empty list.
     const response: ApiResponse<ChatMessage[]> = {
       success: true,
-      data: messages,
+      data: [],
     };
     res.json(response);
   } catch (error) {
@@ -28,31 +28,15 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const userId = req.user?.id;
-    const { message }: { message: string } = req.body;
+    const { message, history }: { message: string; history?: Array<{ role: 'user' | 'ai'; text: string }> } = req.body;
 
     if (!userId || !message?.trim()) {
       return res.status(400).json({ success: false, error: 'Message is required' } as ApiResponse<null>);
     }
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      userId,
-      role: 'user',
-      text: message.trim(),
-      timestamp: new Date().toISOString(),
-    };
-    await chatDb.addMessage(userMessage);
-
-    const botResponse = await generateBotResponse(userId, message.trim());
-
-    const botMessage: ChatMessage = {
-      id: (Date.now() + 1).toString(),
-      userId,
-      role: 'ai',
-      text: botResponse,
-      timestamp: new Date().toISOString(),
-    };
-    await chatDb.addMessage(botMessage);
+    // We do NOT save the message to the database anymore.
+    // Call generateBotResponse passing the in-memory history context.
+    const botResponse = await generateBotResponse(userId, message.trim(), history);
 
     const response: ApiResponse<{ reply: string }> = {
       success: true,
@@ -96,14 +80,21 @@ type ChatCompletionPayload = {
 
 type PreferredLanguage = 'english' | 'hindi';
 
-async function generateBotResponse(userId: string, userMessage: string): Promise<string> {
+async function generateBotResponse(
+  userId: string,
+  userMessage: string,
+  clientHistory?: Array<{ role: 'user' | 'ai'; text: string }>
+): Promise<string> {
   const preferredLanguage = detectPreferredLanguage(userMessage);
 
   try {
-    const history: ChatCompletionMessage[] = (await chatDb.getByUserId(userId)).slice(-12).map((message) => ({
-      role: message.role === 'user' ? 'user' : 'assistant',
-      content: message.text,
-    }));
+    // Map the in-memory history passed from the client
+    const history: ChatCompletionMessage[] = clientHistory
+      ? clientHistory.slice(-12).map((message) => ({
+          role: message.role === 'user' ? 'user' : 'assistant',
+          content: message.text,
+        }))
+      : [];
 
     const messages: ChatCompletionMessage[] = [
       {

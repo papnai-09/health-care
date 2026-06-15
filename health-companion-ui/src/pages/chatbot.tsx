@@ -35,32 +35,24 @@ function ChatbotContent() {
   }, [messages, typing]);
 
   useEffect(() => {
-    if (!user) return;
-
-    const loadHistory = async () => {
-      setLoadingHistory(true);
-      try {
-        const history = await getChatHistory();
-        setMessages(history.length ? history.map((message) => ({ id: message.id, role: message.role, text: message.text })) : [intro]);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Unable to load chat history.");
-      } finally {
-        setLoadingHistory(false);
-      }
-    };
-
-    loadHistory();
+    setMessages([intro]);
   }, [user]);
 
   const send = async (text: string) => {
     if (!user || !text.trim()) return;
 
-    setMessages((current) => [...current, { id: Date.now().toString(), role: "user", text }]);
+    const userMessage: Message = { id: Date.now().toString(), role: "user", text };
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInput("");
     setTyping(true);
 
     try {
-      const response = await chatAssistant(text);
+      const historyContext = nextMessages
+        .filter((m) => m.id !== "intro")
+        .map((m) => ({ role: m.role, text: m.text }));
+
+      const response = await chatAssistant(text, historyContext);
       setMessages((current) => [...current, { id: `${Date.now()}-ai`, role: "ai", text: response.reply }]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to get a response.");
