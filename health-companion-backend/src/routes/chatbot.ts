@@ -205,7 +205,7 @@ function getSystemPrompt(language: PreferredLanguage): string {
       ? 'The user wrote in Hindi or Hinglish. Reply in simple Hindi/Hinglish. Do not switch to English unless a medical term is commonly used in English.'
       : 'The user wrote in English. Reply in clear English. Do not switch to Hindi.';
 
-  return `${languageInstruction} You are a helpful assistant for MediCare AI. You can help users with health, wellness, symptoms, medicines, doctors, appointments, medical reports, and healthcare questions. You are also happy to chat about any other topics or answer general questions when asked. Give compassionate, simple, safe health guidance when medical questions are asked. Do not diagnose with certainty. For severe symptoms, emergencies, pregnancy concerns, chest pain, breathing difficulty, neurological symptoms, or persistent high fever, tell the user to contact a qualified doctor or emergency services.`;
+  return `${languageInstruction} You are a helpful AI assistant for MediCare. You can help users with health, wellness, symptoms, medicines, doctors, appointments, medical reports, and healthcare questions, but you are also a general-purpose AI companion. You are fully allowed and encouraged to answer general questions, chat about daily life, help with coding, explain non-medical concepts, tell jokes, write stories, or have casual conversation on any topic the user wants. Always be friendly, professional, and empathetic. When medical queries are asked, offer compassionate, safe, and simple guidance, reminding them that you do not diagnose with certainty and that they should see a doctor for severe symptoms.`;
 }
 
 async function createChatCompletion({
@@ -294,25 +294,33 @@ function generateFallbackResponse(userMessage: string, language: PreferredLangua
 
   if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
     if (language === 'hindi') {
-      return 'Hello! Main aapka health companion hoon. Aaj main aapki health concern me kaise help kar sakta hoon?';
+      return 'Hello! Main MediCare AI companion hoon. Aaj main aapki kaise madad kar sakta hoon?';
     }
 
-    return 'Hello! I am your health companion. How can I help you with your health concerns today?';
+    return 'Hello! I am your MediCare AI companion. How can I help you today?';
   }
 
-  if (message.includes('thank you') || message.includes('thanks')) {
+  if (message.includes('thank you') || message.includes('thanks') || message.includes('shukriya')) {
     if (language === 'hindi') {
-      return 'Aapka swagat hai. Main health questions me help kar sakta hoon, lekin medical emergency me turant emergency services se contact kijiye.';
+      return 'Aapka swagat hai! Main aapki help karne ke liye hamesha taiyar hoon. Koi aur baat ho to zaroor batayein.';
     }
 
-    return 'You are welcome. I am here to help with health questions, but for medical emergencies, please contact emergency services immediately.';
+    return 'You are welcome! I am always here to help you. Let me know if there is anything else you need.';
+  }
+
+  if (message.includes('name') || message.includes('naam') || message.includes('who are you') || message.includes('kon ho')) {
+    if (language === 'hindi') {
+      return 'Mera naam MediCare AI hai, main aapka health aur general topic helper hoon. Aap mujhse aam baatein bhi kar sakte hain!';
+    }
+
+    return 'I am MediCare AI, your assistant for health questions and general topics. Feel free to chat with me about anything!';
   }
 
   if (language === 'hindi') {
-    return 'Main aapke health questions me help karne ke liye hoon. Medical advice ke liye qualified healthcare professional se consult kijiye. Aap apni health concern ke baare me aur bata sakte hain?';
+    return 'Main yahan aapki madad ke liye hoon. Main health topics ke alawa aam baaton me bhi madad kar sakta hoon. Aap kya puchna chahte hain?';
   }
 
-  return 'I am here to help with your health questions. For medical advice, please consult a qualified healthcare professional. How else can I assist you?';
+  return 'I am here to help you. I can assist with health-related queries as well as general topics and conversations. How can I assist you today?';
 }
 
 export { router as chatbotRouter };
