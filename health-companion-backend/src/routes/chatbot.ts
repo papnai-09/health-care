@@ -100,10 +100,6 @@ async function generateBotResponse(userId: string, userMessage: string): Promise
   const preferredLanguage = detectPreferredLanguage(userMessage);
 
   try {
-    if (!isHealthRelatedMessage(userMessage)) {
-      return getOffTopicReply(preferredLanguage);
-    }
-
     const history: ChatCompletionMessage[] = (await chatDb.getByUserId(userId)).slice(-12).map((message) => ({
       role: message.role === 'user' ? 'user' : 'assistant',
       content: message.text,
@@ -218,21 +214,7 @@ function getSystemPrompt(language: PreferredLanguage): string {
       ? 'The user wrote in Hindi or Hinglish. Reply in simple Hindi/Hinglish. Do not switch to English unless a medical term is commonly used in English.'
       : 'The user wrote in English. Reply in clear English. Do not switch to Hindi.';
 
-  return `${languageInstruction} You are a helpful medical assistant for MediCare AI. Only answer health, wellness, symptoms, medicines, doctors, appointments, medical reports, and healthcare questions. If the user asks anything unrelated to healthcare, politely refuse and ask for a health-related question in the same language. Give compassionate, simple, safe health guidance. Do not diagnose with certainty. For severe symptoms, emergencies, pregnancy concerns, chest pain, breathing difficulty, neurological symptoms, or persistent high fever, tell the user to contact a qualified doctor or emergency services.`;
-}
-
-function getOffTopicReply(language: PreferredLanguage): string {
-  if (language === 'hindi') {
-    return 'Main sirf health, wellness, doctors, appointments, medicines, symptoms, reports, aur medical guidance se related questions me help kar sakta hoon. Please apna health-related question puchiye.';
-  }
-
-  return 'I can only help with health, wellness, doctors, appointments, medicines, symptoms, reports, and medical guidance. Please ask a health-related question.';
-}
-
-function isHealthRelatedMessage(userMessage: string): boolean {
-  // Let the AI model handle health-related filtering dynamically, as instructed in its system prompt,
-  // to avoid blocking valid queries/symptoms that don't match the hardcoded keyword list.
-  return true;
+  return `${languageInstruction} You are a helpful assistant for MediCare AI. You can help users with health, wellness, symptoms, medicines, doctors, appointments, medical reports, and healthcare questions. You are also happy to chat about any other topics or answer general questions when asked. Give compassionate, simple, safe health guidance when medical questions are asked. Do not diagnose with certainty. For severe symptoms, emergencies, pregnancy concerns, chest pain, breathing difficulty, neurological symptoms, or persistent high fever, tell the user to contact a qualified doctor or emergency services.`;
 }
 
 async function createChatCompletion({
