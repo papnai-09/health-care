@@ -1,8 +1,10 @@
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import { Server as SocketIOServer } from 'socket.io';
 import { doctorsRouter } from './routes/doctors';
 import { appointmentsRouter } from './routes/appointments';
 import { recordsRouter } from './routes/records';
@@ -12,10 +14,12 @@ import { authRouter } from './routes/auth';
 import { adminRouter } from './routes/admin';
 import { ensureDatabase, getDatabaseStatus } from './database';
 import { logEmailConfig } from './email';
+import { setupVideoCallSocket } from './videoCall';
 
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 
 // Trust proxy for accurate rate limiting behind reverse proxy (e.g., Render)
 app.set('trust proxy', 1);
@@ -85,11 +89,22 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   res.status(500).json({ success: false, error: 'Something went wrong!' });
 });
 
+// Attach Socket.IO for video call signaling
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+});
+
+setupVideoCallSocket(io);
+
 ensureDatabase()
   .then(() => {
     logEmailConfig();
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`Health Companion API server running on port ${PORT}`);
+      console.log(`Socket.IO attached for video call signaling`);
       console.log(`Health check: http://localhost:${PORT}/health`);
     });
   })
@@ -97,3 +112,4 @@ ensureDatabase()
     console.error('Failed to connect database:', error);
     process.exit(1);
   });
+

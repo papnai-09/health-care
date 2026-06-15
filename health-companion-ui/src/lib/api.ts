@@ -1,5 +1,7 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
+export const getSocketUrl = () => BASE_URL;
+
 export type AccountRole = "patient" | "doctor" | "admin";
 
 export interface AuthUser {
