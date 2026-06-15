@@ -2,6 +2,7 @@ import express from 'express';
 import { appointmentsDb, doctorsDb, usersDb } from '../database';
 import { ApiResponse, Appointment } from '../types';
 import { authenticateToken } from '../middleware/auth';
+import { queueAppointmentEmail } from '../email';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -204,6 +205,31 @@ router.post('/', async (req, res) => {
     };
 
     const created = await appointmentsDb.create(newAppointment);
+
+    // Send email notification to doctor (fire-and-forget)
+    try {
+      // Find doctor's user account to get their email
+      const allUsers = await usersDb.getAll();
+      const doctorUser = allUsers.find((u) => u.role === 'doctor' && u.doctorId === doctorId);
+      const patient = await usersDb.getById(userId);
+
+      if (doctorUser?.email) {
+        queueAppointmentEmail({
+          to: doctorUser.email,
+          doctorName: doctor.name,
+          patientName: patient?.name ?? 'Patient',
+          date,
+          time,
+          specialty: doctor.specialty,
+          type: 'Online',
+        });
+        console.log(`Appointment email queued for Dr. ${doctor.name} (${doctorUser.email})`);
+      }
+    } catch (emailError) {
+      // Don't fail the appointment creation if email fails
+      console.error('Failed to queue appointment notification email:', emailError);
+    }
+
     const response: ApiResponse<Appointment> = {
       success: true,
       data: created,
