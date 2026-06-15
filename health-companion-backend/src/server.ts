@@ -11,6 +11,7 @@ import { dietPlanRouter } from './routes/dietPlan';
 import { authRouter } from './routes/auth';
 import { adminRouter } from './routes/admin';
 import { ensureDatabase, getDatabaseStatus } from './database';
+import { logEmailConfig } from './email';
 
 dotenv.config();
 
@@ -81,6 +82,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 ensureDatabase()
   .then(() => {
+    logEmailConfig();
     app.listen(PORT, () => {
       console.log(`Health Companion API server running on port ${PORT}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
