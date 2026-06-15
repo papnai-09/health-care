@@ -139,10 +139,19 @@ const sendViaBrevo = async ({
   text: string;
   html: string;
 }) => {
+  const apiKey = String(process.env.BREVO_API_KEY).trim();
+  
+  // Debug logging
+  if (!apiKey) {
+    console.error('BREVO_API_KEY is not set or empty');
+  } else {
+    console.debug(`Brevo API key format check: starts with 'xkeysib-'? ${apiKey.startsWith('xkeysib-')}, length: ${apiKey.length}`);
+  }
+
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
-      'api-key': String(process.env.BREVO_API_KEY),
+      'api-key': apiKey,
       'Content-Type': 'application/json',
       accept: 'application/json',
     },
