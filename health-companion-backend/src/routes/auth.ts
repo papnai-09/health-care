@@ -270,9 +270,9 @@ router.post('/login', async (req, res) => {
 
     setSessionCookie(res, token);
 
-    const response: ApiResponse<{ user: PublicUser }> = {
+    const response: ApiResponse<{ user: PublicUser; token: string }> = {
       success: true,
-      data: { user: toPublicUser(existingUser) },
+      data: { user: toPublicUser(existingUser), token },
       message: 'Login successful',
     };
 
@@ -349,9 +349,9 @@ router.post('/verify-email', otpAttemptRateLimit, async (req, res) => {
     setSessionCookie(res, token);
     res.json({
       success: true,
-      data: { user: toPublicUser(verifiedUser) },
+      data: { user: toPublicUser(verifiedUser), token },
       message: 'Email verified and account created successfully',
-    } as ApiResponse<{ user: PublicUser }>);
+    } as ApiResponse<{ user: PublicUser; token: string }>);
   } catch (error) {
     console.error('Email verification error:', error);
     res.status(500).json({ success: false, error: 'Failed to verify email' } as ApiResponse<null>);
@@ -448,9 +448,9 @@ router.post('/google', async (req, res) => {
     setSessionCookie(res, token);
     res.json({
       success: true,
-      data: { user: toPublicUser(refreshedUser) },
+      data: { user: toPublicUser(refreshedUser), token },
       message: 'Google login successful',
-    } as ApiResponse<{ user: PublicUser }>);
+    } as ApiResponse<{ user: PublicUser; token: string }>);
   } catch (error) {
     console.error('Google login error:', error);
     res.status(401).json({ success: false, error: 'Google login failed' } as ApiResponse<null>);

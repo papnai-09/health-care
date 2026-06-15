@@ -151,11 +151,23 @@ export interface AdminOverview {
   appointments: Appointment[];
 }
 
+const TOKEN_KEY = "medicare_token";
+
 const getHeaders = (extra?: Record<string, string>) => {
-  return {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...extra,
   };
+
+  // Add token from localStorage to Authorization header
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
+  return headers;
 };
 
 const request = async <T>(path: string, options: RequestInit = {}) => {
@@ -173,11 +185,34 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
   return (json?.data ?? json) as T;
 };
 
+const setToken = (token: string) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+};
+
+const clearToken = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+};
+
+export const getStoredToken = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(TOKEN_KEY);
+  }
+  return null;
+};
+
 export const login = async (email: string, password: string) => {
-  return request<{ user: AuthUser }>("/api/auth/login", {
+  const result = await request<{ user: AuthUser; token: string }>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
+  if (result.token) {
+    setToken(result.token);
+  }
+  return result;
 };
 
 export const register = async (name: string, email: string, password: string, role: AccountRole, doctorProfile?: DoctorSignupProfile) => {
@@ -188,10 +223,14 @@ export const register = async (name: string, email: string, password: string, ro
 };
 
 export const verifyEmailOtp = async (email: string, otp: string) => {
-  return request<{ user: AuthUser }>("/api/auth/verify-email", {
+  const result = await request<{ user: AuthUser; token: string }>("/api/auth/verify-email", {
     method: "POST",
     body: JSON.stringify({ email, otp }),
   });
+  if (result.token) {
+    setToken(result.token);
+  }
+  return result;
 };
 
 export const resendEmailOtp = async (email: string) => {
@@ -202,10 +241,14 @@ export const resendEmailOtp = async (email: string) => {
 };
 
 export const loginWithGoogle = async (credential: string) => {
-  return request<{ user: AuthUser }>("/api/auth/google", {
+  const result = await request<{ user: AuthUser; token: string }>("/api/auth/google", {
     method: "POST",
     body: JSON.stringify({ credential }),
   });
+  if (result.token) {
+    setToken(result.token);
+  }
+  return result;
 };
 
 export const getCurrentUser = async () => {
@@ -220,6 +263,7 @@ export const updateProfile = async (name: string, profile: UserProfile) => {
 };
 
 export const logout = async () => {
+  clearToken();
   return request<null>("/api/auth/logout", {
     method: "POST",
   });
