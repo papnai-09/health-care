@@ -53,7 +53,6 @@ const requiredFields: Array<{ key: keyof ProfileForm; label: string }> = [
   { key: "dateOfBirth", label: "Date of birth" },
   { key: "gender", label: "Gender" },
   { key: "bloodGroup", label: "Blood group" },
-  { key: "emergencyContactPhone", label: "Emergency phone" },
 ];
 
 const buildProfileForm = (user: AuthUser | null): ProfileForm => ({
@@ -148,7 +147,7 @@ function ProfileContent() {
                     getInitials(form.name, user.email)
                   )}
                 </div>
-                <div className="min-w-0 flex-1 pt-0.5">
+                <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold uppercase tracking-widest text-primary">Account summary</p>
                   <h2 className="mt-1 truncate text-xl font-extrabold text-foreground" title={form.name || "Patient profile"}>
                     {form.name || "Patient profile"}
@@ -314,50 +313,22 @@ function ProfileContent() {
             </div>
           </section>
 
-          <section className="grid gap-5 lg:grid-cols-2">
-            <div className="rounded-lg border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="mb-5 flex items-center gap-3">
-                <FieldIcon><Activity className="h-5 w-5" /></FieldIcon>
-                <div>
-                  <h2 className="text-lg font-bold text-foreground">Medical considerations</h2>
-                  <p className="text-sm text-muted-foreground">Share allergies and ongoing conditions that may affect care planning.</p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="profile-allergies">Allergies or foods to avoid</Label>
-                  <Textarea id="profile-allergies" value={form.allergies} onChange={handleChange("allergies")} className="min-h-28 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary" placeholder="Example: peanuts, lactose, shellfish" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="profile-conditions">Chronic conditions</Label>
-                  <Textarea id="profile-conditions" value={form.chronicConditions} onChange={handleChange("chronicConditions")} className="min-h-28 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary" placeholder="Example: diabetes, asthma, hypertension" />
-                </div>
+          <section className="rounded-lg border border-border bg-card p-5 shadow-card sm:p-6">
+            <div className="mb-5 flex items-center gap-3">
+              <FieldIcon><Activity className="h-5 w-5" /></FieldIcon>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Medical considerations</h2>
+                <p className="text-sm text-muted-foreground">Share allergies and ongoing conditions that may affect care planning.</p>
               </div>
             </div>
-
-            <div className="rounded-lg border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="mb-5 flex items-center gap-3">
-                <FieldIcon><MapPin className="h-5 w-5" /></FieldIcon>
-                <div>
-                  <h2 className="text-lg font-bold text-foreground">Emergency information</h2>
-                  <p className="text-sm text-muted-foreground">Contact and location details for urgent care situations.</p>
-                </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="profile-allergies">Allergies or foods to avoid</Label>
+                <Textarea id="profile-allergies" value={form.allergies} onChange={handleChange("allergies")} className="min-h-28 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary" placeholder="Example: peanuts, lactose, shellfish" />
               </div>
-              <div className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="profile-emergency-name">Contact name</Label>
-                    <Input id="profile-emergency-name" value={form.emergencyContactName} onChange={handleChange("emergencyContactName")} className={fieldClassName} placeholder="Family member" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="profile-emergency-phone">Contact phone *</Label>
-                    <Input id="profile-emergency-phone" value={form.emergencyContactPhone} onChange={handleChange("emergencyContactPhone")} className={fieldClassName} placeholder="+91 98765 43210" required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="profile-address">Address</Label>
-                  <Textarea id="profile-address" value={form.address} onChange={handleChange("address")} className="min-h-32 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary" placeholder="Current residential address" />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="profile-conditions">Chronic conditions</Label>
+                <Textarea id="profile-conditions" value={form.chronicConditions} onChange={handleChange("chronicConditions")} className="min-h-28 rounded-lg border-border bg-background/80 text-sm focus-visible:ring-primary" placeholder="Example: diabetes, asthma, hypertension" />
               </div>
             </div>
           </section>
