@@ -200,12 +200,7 @@ function detectPreferredLanguage(userMessage: string): PreferredLanguage {
 }
 
 function getSystemPrompt(language: PreferredLanguage): string {
-  const languageInstruction =
-    language === 'hindi'
-      ? 'The user wrote in Hindi or Hinglish. Reply in simple Hindi/Hinglish. Do not switch to English unless a medical term is commonly used in English.'
-      : 'The user wrote in English. Reply in clear English. Do not switch to Hindi.';
-
-  return `${languageInstruction} You are a helpful AI assistant for MediCare. You can help users with health, wellness, symptoms, medicines, doctors, appointments, medical reports, and healthcare questions, but you are also a general-purpose AI companion. You are fully allowed and encouraged to answer general questions, chat about daily life, help with coding, explain non-medical concepts, tell jokes, write stories, or have casual conversation on any topic the user wants. Always be friendly, professional, and empathetic. When medical queries are asked, offer compassionate, safe, and simple guidance, reminding them that you do not diagnose with certainty and that they should see a doctor for severe symptoms.`;
+  return "You are a helpful, friendly, and empathetic general-purpose AI assistant. You can converse naturally in English, Hindi, or Hinglish. Feel free to chat, answer questions, write stories, explain concepts, help with code, and discuss any topic the user wants.";
 }
 
 async function createChatCompletion({
@@ -242,85 +237,10 @@ async function createChatCompletion({
 }
 
 function generateFallbackResponse(userMessage: string, language: PreferredLanguage = detectPreferredLanguage(userMessage)): string {
-  const message = userMessage.toLowerCase();
-
-  if (message.includes('fever') || message.includes('temperature')) {
-    if (language === 'hindi') {
-      return 'Agar aapko bukhar hai, paani pite rahiye aur rest kijiye. Agar temperature 103 F (39.4 C) se upar ho, bukhar 3 din se zyada rahe, ya saans/chest pain jaisi serious symptoms ho, doctor ya emergency care se turant contact kijiye.';
-    }
-
-    return 'If you have a fever, make sure to stay hydrated and rest. If your temperature is above 103 F (39.4 C) or persists for more than 3 days, please consult a doctor immediately.';
-  }
-
-  if (message.includes('headache') || message.includes('pain')) {
-    if (language === 'hindi') {
-      return 'Headache ya pain ke kai reasons ho sakte hain. Paani pijiye, rest kijiye, aur agar pain severe hai, baar-baar aa raha hai, ya kisi aur serious symptom ke saath hai to healthcare professional ko dikhaiye.';
-    }
-
-    return 'Headaches can have many causes. Try resting in a quiet, dark room and staying hydrated. If the pain is severe or persistent, please see a healthcare professional.';
-  }
-
-  if (message.includes('appointment') || message.includes('book')) {
-    if (language === 'hindi') {
-      return 'Main appointment book karne me help kar sakta hoon. Please preferred date, time, aur doctor specialty choose kijiye.';
-    }
-
-    return 'I can help you book an appointment with one of our doctors. Please choose your preferred date, time, and doctor specialty.';
-  }
-
-  if (message.includes('medication') || message.includes('medicine')) {
-    if (language === 'hindi') {
-      return 'Medicine lene se pehle doctor ya pharmacist se consult kijiye. Wo aapki health condition ke hisaab se safe guidance de sakte hain.';
-    }
-
-    return 'Please consult your doctor or pharmacist before taking medication. They can provide personalized advice based on your health condition.';
-  }
-
-  if (message.includes('exercise') || message.includes('workout')) {
-    if (language === 'hindi') {
-      return 'Regular exercise health ke liye achhi hoti hai. Hafte me lagbhag 150 minutes moderate activity aim kar sakte hain, lekin nayi routine start karne se pehle doctor se consult kijiye agar koi medical condition hai.';
-    }
-
-    return 'Regular exercise is great for health. Aim for at least 150 minutes of moderate aerobic activity per week, and consult your doctor before starting a new routine.';
-  }
-
-  if (message.includes('diet') || message.includes('food')) {
-    if (language === 'hindi') {
-      return 'Balanced diet me fruits, vegetables, whole grains, aur lean proteins include kijiye. Personalized diet ke liye nutritionist ya doctor se consult karna best rahega.';
-    }
-
-    return 'A balanced diet with fruits, vegetables, whole grains, and lean proteins supports good health. Consider consulting a nutritionist for personalized advice.';
-  }
-
-  if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
-    if (language === 'hindi') {
-      return 'Hello! Main MediCare AI companion hoon. Aaj main aapki kaise madad kar sakta hoon?';
-    }
-
-    return 'Hello! I am your MediCare AI companion. How can I help you today?';
-  }
-
-  if (message.includes('thank you') || message.includes('thanks') || message.includes('shukriya')) {
-    if (language === 'hindi') {
-      return 'Aapka swagat hai! Main aapki help karne ke liye hamesha taiyar hoon. Koi aur baat ho to zaroor batayein.';
-    }
-
-    return 'You are welcome! I am always here to help you. Let me know if there is anything else you need.';
-  }
-
-  if (message.includes('name') || message.includes('naam') || message.includes('who are you') || message.includes('kon ho')) {
-    if (language === 'hindi') {
-      return 'Mera naam MediCare AI hai, main aapka health aur general topic helper hoon. Aap mujhse aam baatein bhi kar sakte hain!';
-    }
-
-    return 'I am MediCare AI, your assistant for health questions and general topics. Feel free to chat with me about anything!';
-  }
-
   if (language === 'hindi') {
-    return 'Main yahan aapki madad ke liye hoon. Main health topics ke alawa aam baaton me bhi madad kar sakta hoon. Aap kya puchna chahte hain?';
+    return 'Main abhi network connection issue ki wajah se response nahi de pa raha hoon. Kripya thodi der baad phir se koshish karein.';
   }
-
-  return 'I am here to help you. I can assist with health-related queries as well as general topics and conversations. How can I assist you today?';
+  return 'I am currently unable to respond due to a network connection issue. Please try again in a moment.';
 }
 
 export { router as chatbotRouter };

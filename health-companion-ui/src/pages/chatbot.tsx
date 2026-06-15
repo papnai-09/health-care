@@ -17,10 +17,10 @@ interface Message {
 const intro: Message = {
   id: "intro",
   role: "ai",
-  text: "Hi. I am your AI health assistant. Tell me your symptoms, duration, and any important details.",
+  text: "Hi! I am your AI assistant. Ask me anything, and let's chat!",
 };
 
-const suggestions = ["I have had fever for 2 days", "My child has a sore throat", "I need help choosing a doctor"];
+const suggestions = ["Hello! How are you?", "Tell me a joke", "What can you do?"];
 
 function ChatbotContent() {
   const { user } = useAuth();
@@ -91,7 +91,7 @@ function ChatbotContent() {
             <div className="min-w-0">
               <h1 className="text-lg font-bold">MediCare AI</h1>
               <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                <Sparkles className="h-3 w-3" /> Symptom guidance and safe next steps
+                <Sparkles className="h-3 w-3" /> Your general-purpose AI assistant
               </p>
             </div>
           </div>
@@ -145,7 +145,7 @@ function ChatbotContent() {
         )}
 
         <form onSubmit={onSubmit} className="flex items-center gap-3 border-t border-border bg-background p-3 sm:p-4">
-          <Input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Describe how you are feeling" className="h-12 flex-1 rounded-lg" />
+          <Input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type a message..." className="h-12 flex-1 rounded-lg" />
           <Button type="submit" variant="hero" size="icon" className="h-12 w-12" disabled={!input.trim() || typing}>
             <Send className="h-5 w-5" />
           </Button>
