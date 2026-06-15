@@ -215,9 +215,9 @@ router.post('/register', verificationRateLimit, async (req, res) => {
         return res.status(500).json({ success: false, error: error.message } as ApiResponse<null>);
       }
 
-      return res.status(400).json({
+      return res.status(503).json({
         success: false,
-        error: 'Email does not exist or OTP mail could not be sent. Please use a valid email address.',
+        error: 'Unable to send verification email right now. Please try again in a few minutes.',
       } as ApiResponse<null>);
     }
 
@@ -401,9 +401,9 @@ router.post('/resend-otp', verificationRateLimit, async (req, res) => {
         return res.status(500).json({ success: false, error: error.message } as ApiResponse<null>);
       }
 
-      return res.status(400).json({
+      return res.status(503).json({
         success: false,
-        error: 'Email does not exist or OTP mail could not be sent. Please use a valid email address.',
+        error: 'Unable to send verification email right now. Please try again in a few minutes.',
       } as ApiResponse<null>);
     }
 

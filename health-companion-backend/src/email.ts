@@ -6,6 +6,11 @@ export const canSendEmail = () => hasSmtpConfig();
 
 export const sendOtpEmail = async ({ to, name, otp }: { to: string; name: string; otp: string }): Promise<void> => {
   if (!hasSmtpConfig()) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] Verification OTP for ${to}: ${otp}`);
+      return;
+    }
+
     throw new Error('Email service is not configured. Add SMTP settings in backend .env.');
   }
 
