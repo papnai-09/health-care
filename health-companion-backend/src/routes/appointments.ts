@@ -208,14 +208,25 @@ router.post('/', async (req, res) => {
 
     // Send email notification to doctor (fire-and-forget)
     try {
-      // Find doctor's user account to get their email
-      const allUsers = await usersDb.getAll();
-      const doctorUser = allUsers.find((u) => u.role === 'doctor' && u.doctorId === doctorId);
+      const doctorProfile = await doctorsDb.getById(doctorId);
       const patient = await usersDb.getById(userId);
+      let doctorEmail: string | undefined = undefined;
 
-      if (doctorUser?.email) {
+      if (doctorProfile?.accountUserId) {
+        const doctorUser = await usersDb.getById(doctorProfile.accountUserId);
+        doctorEmail = doctorUser?.email;
+      }
+
+      // Fallback: search all users if direct link is missing
+      if (!doctorEmail) {
+        const allUsers = await usersDb.getAll();
+        const doctorUser = allUsers.find((u) => u.role === 'doctor' && u.doctorId === doctorId);
+        doctorEmail = doctorUser?.email;
+      }
+
+      if (doctorEmail) {
         queueAppointmentEmail({
-          to: doctorUser.email,
+          to: doctorEmail,
           doctorName: doctor.name,
           patientName: patient?.name ?? 'Patient',
           date,
@@ -223,7 +234,9 @@ router.post('/', async (req, res) => {
           specialty: doctor.specialty,
           type: 'Online',
         });
-        console.log(`Appointment email queued for Dr. ${doctor.name} (${doctorUser.email})`);
+        console.log(`Appointment email queued for Dr. ${doctor.name} (${doctorEmail})`);
+      } else {
+        console.warn(`Could not find email for doctorId: ${doctorId}`);
       }
     } catch (emailError) {
       // Don't fail the appointment creation if email fails

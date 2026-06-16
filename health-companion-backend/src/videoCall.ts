@@ -26,7 +26,8 @@ const authenticateSocket = async (token: string) => {
  * Returns { start, end } as Date objects, or null if parsing fails.
  */
 const getSlotWindow = (date: string, time: string) => {
-  const start = new Date(`${date}T${time}:00`);
+  // Parse in Indian Standard Time (IST, UTC+05:30)
+  const start = new Date(`${date}T${time}:00+05:30`);
   if (isNaN(start.getTime())) return null;
 
   const end = new Date(start.getTime() + SLOT_DURATION_MINUTES * 60 * 1000);
@@ -91,7 +92,7 @@ export const setupVideoCallSocket = (io: SocketIOServer) => {
             return;
           }
 
-          if (now > slotWindow.end) {
+          if (now >= slotWindow.end) {
             // Auto-cancel expired appointment if still scheduled
             if (appointment.status === 'scheduled') {
               try {
