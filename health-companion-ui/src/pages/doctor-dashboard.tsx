@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { Activity, ArrowRight, CalendarCheck, ClipboardList, Clock, MessageCircle, Stethoscope, Users, Video } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -18,6 +19,7 @@ const formatPatient = (appointment: Appointment) => appointment.patientName ?? `
 
 function DoctorDashboardContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -131,7 +133,13 @@ function DoctorDashboardContent() {
                       <span className="flex items-center gap-1"><Stethoscope className="h-3 w-3" /> {appointment.type}</span>
                     </div>
                   </div>
-                  <Button variant="hero" size="sm">Join</Button>
+                  <Button
+                    variant="hero"
+                    size="sm"
+                    onClick={() => router.push(`/video-call?id=${appointment.id}&patient=${encodeURIComponent(formatPatient(appointment))}&doctor=${encodeURIComponent(appointment.doctorName)}`)}
+                  >
+                    <Video className="h-4 w-4 mr-1" /> Join Call
+                  </Button>
                 </div>
               ))}
             </div>

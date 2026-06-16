@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router";
 import { BadgeCheck, Building2, CalendarCheck, Clock, GraduationCap, MapPin, Search, Stethoscope, Video } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -39,6 +40,7 @@ function groupDoctors(doctors: Doctor[]) {
 
 function AppointmentsContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [date, setDate] = useState(today);
@@ -149,7 +151,20 @@ function AppointmentsContent() {
                       <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Online</span>
                     </div>
                   </div>
-                  <Button variant="hero" size="sm">Join</Button>
+                  {appointment.status === "scheduled" && (
+                    <Button
+                      variant="hero"
+                      size="sm"
+                      onClick={() => router.push(`/video-call?id=${appointment.id}&patient=${encodeURIComponent(appointment.patientName ?? '')}&doctor=${encodeURIComponent(appointment.doctorName)}`)}
+                    >
+                      <Video className="h-4 w-4 mr-1" /> Join Call
+                    </Button>
+                  )}
+                  {appointment.status !== "scheduled" && (
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${appointment.status === "completed" ? "bg-accent-soft text-accent" : "bg-destructive/10 text-destructive"}`}>
+                      {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -357,7 +372,19 @@ function AppointmentsContent() {
                     <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {appointment.type}</span>
                   </div>
                 </div>
-                <Button variant="soft" size="sm">Join</Button>
+                {appointment.status === "scheduled" ? (
+                  <Button
+                    variant="hero"
+                    size="sm"
+                    onClick={() => router.push(`/video-call?id=${appointment.id}&patient=${encodeURIComponent(user?.name ?? '')}&doctor=${encodeURIComponent(appointment.doctorName)}`)}
+                  >
+                    <Video className="h-4 w-4 mr-1" /> Join Call
+                  </Button>
+                ) : (
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${appointment.status === "completed" ? "bg-accent-soft text-accent" : "bg-destructive/10 text-destructive"}`}>
+                    {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                  </span>
+                )}
               </div>
             ))}
           </div>
