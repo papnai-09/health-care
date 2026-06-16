@@ -320,11 +320,12 @@ const buildAppointmentNotificationContent = ({
     return `${displayHour}:${String(m).padStart(2, '0')} ${period}`;
   };
 
-  const formattedDate = new Date(`${date}T00:00:00`).toLocaleDateString('en-IN', {
+  const formattedDate = new Date(`${date}T00:00:00+05:30`).toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'Asia/Kolkata',
   });
 
   const timeSlot = `${formatTimeDisplay(time)} - ${formatTimeDisplay(endTime)}`;
