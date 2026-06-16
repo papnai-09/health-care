@@ -1,3 +1,16 @@
+if (typeof window !== 'undefined') {
+  (window as any).global = window;
+  (window as any).process = {
+    ...((window as any).process || {}),
+    env: { DEBUG: undefined },
+    version: '',
+    nextTick: (fn: any) => setTimeout(fn, 0),
+    listeners: () => [],
+    on: () => {},
+    removeListener: () => {},
+  };
+}
+
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { useState } from "react";

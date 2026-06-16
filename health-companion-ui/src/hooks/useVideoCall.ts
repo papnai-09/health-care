@@ -39,7 +39,8 @@ export function useVideoCall({ appointmentId, userId, role, onCallEnd }: UseVide
         peersRef.current.delete(socketId);
       }
 
-      const peer = new SimplePeer({ initiator, trickle: false, stream });
+      const PeerConstructor = (SimplePeer as any).default || SimplePeer;
+      const peer = new PeerConstructor({ initiator, trickle: false, stream });
 
       peer.on('signal', (signal) => {
         socketRef.current?.emit('signal', {
