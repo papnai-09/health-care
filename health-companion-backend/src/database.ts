@@ -160,6 +160,7 @@ export const doctorsDb = {
 export const appointmentsDb = {
   getAll: async (): Promise<Appointment[]> => AppointmentModel.find().lean<Appointment[]>(),
   getByUserId: async (userId: string): Promise<Appointment[]> => AppointmentModel.find({ userId }).lean<Appointment[]>(),
+  getByDoctorId: async (doctorId: string): Promise<Appointment[]> => AppointmentModel.find({ doctorId }).lean<Appointment[]>(),
   getById: async (id: string): Promise<Appointment | null> => AppointmentModel.findOne({ id }).lean<Appointment | null>(),
   create: async (appointment: Appointment): Promise<Appointment> => toPlain<Appointment>(await AppointmentModel.create(appointment)),
   update: async (id: string, updates: Partial<Appointment>): Promise<Appointment | null> =>

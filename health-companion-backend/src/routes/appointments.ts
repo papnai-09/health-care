@@ -78,9 +78,11 @@ router.get('/', async (req, res) => {
     }
 
     const appointments =
-      role === 'doctor'
-        ? await Promise.all((await appointmentsDb.getAll()).filter((appointment) => appointment.doctorId === doctorId).map(withPatient))
-        : await appointmentsDb.getByUserId(userId);
+      role === 'doctor' && doctorId
+        ? await Promise.all((await appointmentsDb.getByDoctorId(doctorId)).map(withPatient))
+        : role === 'doctor'
+          ? []
+          : await appointmentsDb.getByUserId(userId);
     const response: ApiResponse<Appointment[]> = {
       success: true,
       data: appointments
