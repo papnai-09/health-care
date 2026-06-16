@@ -76,6 +76,7 @@ export interface Appointment {
   type: string;
   status: "scheduled" | "completed" | "cancelled";
   createdAt: string;
+  otherPartyJoined?: boolean;
 }
 
 export interface HealthRecord {

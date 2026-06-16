@@ -3,6 +3,7 @@ import { appointmentsDb, doctorsDb, usersDb } from '../database';
 import { ApiResponse, Appointment } from '../types';
 import { authenticateToken } from '../middleware/auth';
 import { queueAppointmentEmail } from '../email';
+import { getParticipantsInRoom } from '../videoCall';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -83,9 +84,28 @@ router.get('/', async (req, res) => {
         : role === 'doctor'
           ? []
           : await appointmentsDb.getByUserId(userId);
+
+    const appointmentsWithStatus = appointments.map((app) => {
+      if (app.status !== 'scheduled') return app;
+
+      const participants = getParticipantsInRoom(app.id);
+      const otherPartyJoined = participants.some((p) => {
+        if (role === 'doctor') {
+          return p.role === 'patient'; // Doctor checks if patient joined
+        } else {
+          return p.role === 'doctor';  // Patient checks if doctor joined
+        }
+      });
+
+      return {
+        ...app,
+        otherPartyJoined,
+      };
+    });
+
     const response: ApiResponse<Appointment[]> = {
       success: true,
-      data: appointments
+      data: appointmentsWithStatus
     };
     res.json(response);
   } catch (error) {

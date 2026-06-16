@@ -351,3 +351,8 @@ const removeFromRoom = (appointmentId: string, socketId: string) => {
     rooms.set(appointmentId, filtered);
   }
 };
+
+export const getParticipantsInRoom = (appointmentId: string) => {
+  const participants = rooms.get(appointmentId) || [];
+  return participants.map((p) => ({ userId: p.userId, role: p.role }));
+};

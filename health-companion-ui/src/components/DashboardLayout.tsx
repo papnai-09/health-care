@@ -106,6 +106,13 @@ export const DashboardLayout = ({ children, title, subtitle }: Props) => {
 
   useEffect(() => {
     void loadNotificationData();
+
+    // Poll for new notifications/reminders every 15 seconds
+    const interval = setInterval(() => {
+      void loadNotificationData();
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, [loadNotificationData]);
 
   useEffect(() => {
@@ -199,6 +206,31 @@ export const DashboardLayout = ({ children, title, subtitle }: Props) => {
         },
       });
     }
+
+    // Add notification if the other party has joined the video call room
+    const activeCalls = appointments.filter(
+      (appointment) => appointment.status === "scheduled" && appointment.otherPartyJoined === true
+    );
+
+    activeCalls.forEach((appointment) => {
+      const otherRole = user?.role === "doctor" ? "Patient" : "Doctor";
+      const otherName = user?.role === "doctor" ? (appointment.patientName ?? "Patient") : appointment.doctorName;
+
+      items.push({
+        id: `call-active-${appointment.id}`,
+        title: `${otherRole} has joined the call!`,
+        body: `${otherName} is waiting for you in the video consultation. Click below to join now.`,
+        tone: "warning",
+        icon: "appointment",
+        actionLabel: "Join Call Now",
+        onAction: () => {
+          setNotificationsOpen(false);
+          const encodedPatient = encodeURIComponent(appointment.patientName ?? "");
+          const encodedDoctor = encodeURIComponent(appointment.doctorName);
+          void router.push(`/video-call?id=${appointment.id}&patient=${encodedPatient}&doctor=${encodedDoctor}`);
+        },
+      });
+    });
 
     if (!items.length) {
       items.push({
