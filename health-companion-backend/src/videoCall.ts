@@ -16,6 +16,17 @@ const rooms = new Map<string, RoomParticipant[]>();
 // appointmentId -> auto-expire timer
 const expiryTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
+interface ChatMessage {
+  senderId: string;
+  senderName: string;
+  senderRole: 'patient' | 'doctor';
+  message: string;
+  timestamp: string;
+}
+
+// appointmentId -> list of chat messages
+const roomMessages = new Map<string, ChatMessage[]>();
+
 const authenticateSocket = async (token: string) => {
   if (!token) return null;
   return usersDb.getByToken(token);
@@ -152,6 +163,7 @@ export const setupVideoCallSocket = (io: SocketIOServer) => {
           role,
           userName: user.name,
           participants: otherParticipants.map((p) => ({ socketId: p.socketId, role: p.role })),
+          messages: roomMessages.get(appointmentId) || [],
         });
 
         // Tell others that someone new joined (for WebRTC signaling)
@@ -198,6 +210,7 @@ export const setupVideoCallSocket = (io: SocketIOServer) => {
               // Clean up room
               rooms.delete(appointmentId);
               expiryTimers.delete(appointmentId);
+              roomMessages.delete(appointmentId);
             }, msUntilExpiry);
 
             expiryTimers.set(appointmentId, timer);
@@ -218,15 +231,15 @@ export const setupVideoCallSocket = (io: SocketIOServer) => {
       });
     });
 
-    // End the call
+    // End the call (completes appointment, kept for compatibility)
     socket.on('end-call', async (data: { appointmentId: string }) => {
       const { appointmentId } = data;
       if (!appointmentId) return;
 
-      console.log(`[VideoCall] Call ended in room ${appointmentId} by ${socket.id}`);
+      console.log(`[VideoCall] Call ended (completed) in room ${appointmentId} by ${socket.id}`);
 
-      // Notify all other participants
-      socket.to(appointmentId).emit('call-ended', { by: socket.id });
+      // Notify all participants
+      io.to(appointmentId).emit('appointment-completed');
 
       // Mark appointment as completed
       try {
@@ -235,15 +248,82 @@ export const setupVideoCallSocket = (io: SocketIOServer) => {
         console.error('[VideoCall] Failed to update appointment status:', error);
       }
 
-      // Clear expiry timer since call ended properly
+      // Clear expiry timer
       const timer = expiryTimers.get(appointmentId);
       if (timer) {
         clearTimeout(timer);
         expiryTimers.delete(appointmentId);
       }
 
-      // Clean up room
+      // Clean up room and messages
       rooms.delete(appointmentId);
+      roomMessages.delete(appointmentId);
+    });
+
+    // Complete appointment explicitly (initiated by Doctor)
+    socket.on('complete-appointment', async (data: { appointmentId: string }) => {
+      const { appointmentId } = data;
+      if (!appointmentId) return;
+
+      console.log(`[VideoCall] Appointment completed in room ${appointmentId} by ${socket.id}`);
+
+      // Notify all participants
+      io.to(appointmentId).emit('appointment-completed');
+
+      // Mark appointment as completed
+      try {
+        await appointmentsDb.update(appointmentId, { status: 'completed' });
+      } catch (error) {
+        console.error('[VideoCall] Failed to update appointment status:', error);
+      }
+
+      // Clear expiry timer
+      const timer = expiryTimers.get(appointmentId);
+      if (timer) {
+        clearTimeout(timer);
+        expiryTimers.delete(appointmentId);
+      }
+
+      // Clean up room and messages
+      rooms.delete(appointmentId);
+      roomMessages.delete(appointmentId);
+    });
+
+    // Leave the call without completing the appointment
+    socket.on('leave-call', (data: { appointmentId: string }) => {
+      const { appointmentId } = data;
+      if (!appointmentId) return;
+
+      console.log(`[VideoCall] Participant left room ${appointmentId}: ${socket.id}`);
+
+      // Notify other participant(s)
+      socket.to(appointmentId).emit('peer-left', { socketId: socket.id });
+      removeFromRoom(appointmentId, socket.id);
+    });
+
+    // Real-time Chat message forwarding
+    socket.on('send-message', (data: { appointmentId: string; message: string }) => {
+      const { appointmentId, message } = data;
+      if (!appointmentId || !message || !currentRoom || !currentUserId) return;
+
+      const participants = rooms.get(appointmentId) || [];
+      const participant = participants.find((p) => p.socketId === socket.id);
+      if (!participant) return;
+
+      const chatMsg: ChatMessage = {
+        senderId: currentUserId,
+        senderName: participant.userName,
+        senderRole: participant.role,
+        message,
+        timestamp: new Date().toISOString(),
+      };
+
+      const messages = roomMessages.get(appointmentId) || [];
+      messages.push(chatMsg);
+      roomMessages.set(appointmentId, messages);
+
+      // Broadcast message to everyone in the room
+      io.to(appointmentId).emit('receive-message', chatMsg);
     });
 
     socket.on('disconnect', () => {
@@ -265,12 +345,8 @@ const removeFromRoom = (appointmentId: string, socketId: string) => {
   const filtered = participants.filter((p) => p.socketId !== socketId);
   if (filtered.length === 0) {
     rooms.delete(appointmentId);
-    // Clear expiry timer if room is empty
-    const timer = expiryTimers.get(appointmentId);
-    if (timer) {
-      clearTimeout(timer);
-      expiryTimers.delete(appointmentId);
-    }
+    // Keep the expiry timer running so that roomMessages is cleaned up
+    // and the appointment is auto-expired when the slot time actually ends.
   } else {
     rooms.set(appointmentId, filtered);
   }

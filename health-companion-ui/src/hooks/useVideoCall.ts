@@ -13,6 +13,14 @@ interface UseVideoCallProps {
   onCallEnd?: () => void;
 }
 
+export interface ChatMessage {
+  senderId: string;
+  senderName: string;
+  senderRole: 'patient' | 'doctor';
+  message: string;
+  timestamp: string;
+}
+
 export function useVideoCall({ appointmentId, userId, role, onCallEnd }: UseVideoCallProps) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -22,6 +30,7 @@ export function useVideoCall({ appointmentId, userId, role, onCallEnd }: UseVide
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -131,8 +140,11 @@ export function useVideoCall({ appointmentId, userId, role, onCallEnd }: UseVide
     });
 
     // Room joined successfully
-    socket.on('room-joined', ({ appointmentId: roomId, role: myRole, userName, participants }) => {
+    socket.on('room-joined', ({ appointmentId: roomId, role: myRole, userName, participants, messages: initialMessages }) => {
       console.log('[VideoCall] Room joined:', roomId, 'as', myRole);
+      if (initialMessages) {
+        setMessages(initialMessages);
+      }
       // Create peers for existing participants
       participants?.forEach(({ socketId }: { socketId: string }) => {
         const stream = localStreamRef.current;
@@ -181,6 +193,21 @@ export function useVideoCall({ appointmentId, userId, role, onCallEnd }: UseVide
         setIsConnected(false);
         setRemoteStream(null);
       }
+    });
+
+    // Receive message
+    socket.on('receive-message', (message: ChatMessage) => {
+      setMessages((prev) => [...prev, message]);
+    });
+
+    // Appointment completed
+    socket.on('appointment-completed', () => {
+      console.log('[VideoCall] Appointment completed by doctor');
+      toast.success('Consultation Completed', { description: 'The consultation session has been successfully completed.' });
+      cleanupPeers();
+      setIsCallActive(false);
+      setIsConnected(false);
+      onCallEnd?.();
     });
 
     // Call ended by other party
@@ -264,13 +291,26 @@ export function useVideoCall({ appointmentId, userId, role, onCallEnd }: UseVide
     }
   };
 
-  const endCall = () => {
-    socketRef.current?.emit('end-call', { appointmentId });
+  const leaveCall = useCallback(() => {
+    socketRef.current?.emit('leave-call', { appointmentId });
     cleanupPeers();
     setIsCallActive(false);
     setIsConnected(false);
     onCallEnd?.();
-  };
+  }, [appointmentId, onCallEnd]);
+
+  const completeCall = useCallback(() => {
+    socketRef.current?.emit('complete-appointment', { appointmentId });
+  }, [appointmentId]);
+
+  const sendMessage = useCallback((text: string) => {
+    if (text.trim() && socketRef.current) {
+      socketRef.current.emit('send-message', {
+        appointmentId,
+        message: text.trim()
+      });
+    }
+  }, [appointmentId]);
 
   const cleanupPeers = () => {
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
@@ -294,8 +334,12 @@ export function useVideoCall({ appointmentId, userId, role, onCallEnd }: UseVide
     isMuted,
     isCameraOff,
     isExpired,
+    messages,
     startCall,
-    endCall,
+    leaveCall,
+    completeCall,
+    endCall: leaveCall, // alias for backwards compatibility
+    sendMessage,
     toggleMute,
     toggleCamera,
   };
