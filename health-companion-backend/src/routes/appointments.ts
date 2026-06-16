@@ -49,9 +49,11 @@ const getDoctorWindow = (doctor: { availableFrom?: string; availableTo?: string 
 };
 
 const buildAvailabilitySlots = async (doctorId: string, date: string, start: number, end: number) => {
-  const now = new Date();
-  const today = now.toISOString().split('T')[0];
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  // Convert current server time to Indian Standard Time (IST, UTC+05:30)
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const nowIst = new Date(Date.now() + istOffset);
+  const today = nowIst.toISOString().split('T')[0];
+  const currentMinutes = nowIst.getUTCHours() * 60 + nowIst.getUTCMinutes();
   const appointments = await appointmentsDb.getAll();
 
   const slots = [];
